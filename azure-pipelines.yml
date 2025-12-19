@@ -34,7 +34,12 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-           tflint --chdir "$(work_dir)/${{ parameters.environment }}" --format junit > "$(work_dir)/${{ parameters.environment }}/tflint.xml"
+           tflint -o junit > tflint.xml"
+      - task: PublishBuildArtifacts@1
+        inputs:
+          PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+          ArtifactName: 'tflint'
+          publishLocation: 'Container'
 
 
 
@@ -45,7 +50,7 @@ stages:
           targetType: 'inline'
           script: |
            cd "$(work_dir)/${{ parameters.environment }}"
-           tfsec . --format junit tfsec.xml
+           tfsec . -o junit > tfsec.xml
 
 
 
@@ -101,7 +106,7 @@ stages:
             terraform plan -out tfplan.binary
             terraform show -json tfplan.binary > plan.json
 
-      # ✅ Correct artifact publish
+      
       - task: PublishPipelineArtifact@1
         displayName: "Publish Terraform Plan JSON"
         inputs:
@@ -119,12 +124,11 @@ stages:
   - job: CostJob
     displayName: "Run Infracost"
     steps:
-      - checkout: self
-
-      # ✅ Correct artifact download
+      - checkout: self      
       - download: current
         artifact: terraform-plan
 
+      
       - task: PowerShell@2
         displayName: "Run Infracost Breakdown"
         inputs:
