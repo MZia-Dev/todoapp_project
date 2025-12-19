@@ -35,7 +35,7 @@ stages:
           targetType: 'inline'
           script: |
             cd "$(work_dir)\${{ parameters.environment }}"
-            tflint --recursive -o junitxml > tflint.xml
+            'tflint --recursive -o junitxml > tflint.xml'
 
       # tfsec -------------
       - task: PowerShell@2
