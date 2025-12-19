@@ -34,7 +34,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-           tflint -o junit > tflint.xml"
+           tflint -o junit > tflint.xml
       - task: PublishBuildArtifacts@1
         inputs:
           PathtoPublish: '$(Build.ArtifactStagingDirectory)'
