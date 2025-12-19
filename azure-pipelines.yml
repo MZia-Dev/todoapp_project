@@ -42,3 +42,15 @@ stages:
           script: |
             cd "$(work_dir)\${{ parameters.environment }}"
             tfsec .
+      - task: PowerShell@2
+        displayName: "Run Checkov"
+        inputs:
+          targetType: 'inline'
+          script: 'checkov -d .'
+
+      - task: PowerShell@2
+        displayName: "Run Trivy"
+        inputs:
+          targetType: 'inline'
+          script: 'trivy fs .'
+
