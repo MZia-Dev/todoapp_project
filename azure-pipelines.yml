@@ -98,7 +98,7 @@ stages:
             terraform show -json tfplan.binary > plan.json
       - task: PublishBuildArtifacts@1
         inputs:
-          PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+          PathtoPublish: '$(work_dir)\${{ parameters.environment }}'
           ArtifactName: 'plan'
           publishLocation: 'Container'
 
@@ -127,7 +127,7 @@ stages:
           buildVersionToDownload: 'latest'
           downloadType: 'specific'
           itemPattern: '**.jason'
-          downloadPath: '$(System.ArtifactsDirectory)'
+          downloadPath: '$(work_dir)\${{ parameters.environment }}'
       # - checkout: self
       # - task: DownloadBuildArtifacts@0
       #   displayName: "Download Terraform Plan Artifact"
