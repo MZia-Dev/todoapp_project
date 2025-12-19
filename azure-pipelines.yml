@@ -56,4 +56,4 @@ stages:
          targetType: 'inline'
          script: |
           cd "$(work_dir)\${{ parameters.environment }}"
-          trivy fs .
+          trivy fs . --skip-db-update
