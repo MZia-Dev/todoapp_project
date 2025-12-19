@@ -79,6 +79,7 @@ stages:
   - job: PlanJob
     displayName: "Run Terraform Init & Plan"
     steps:
+      - checkout: self
 
       - task: PowerShell@2
         displayName: "Terraform Init"
@@ -96,18 +97,14 @@ stages:
             cd "$(work_dir)\${{ parameters.environment }}"
             terraform plan -out tfplan.binary
             terraform show -json tfplan.binary > plan.json
-      - task: PublishBuildArtifacts@1
+
+      # ✅ Correct artifact publish
+      - task: PublishPipelineArtifact@1
+        displayName: "Publish Terraform Plan JSON"
         inputs:
-          PathtoPublish: '$(work_dir)\${{ parameters.environment }}'
-          ArtifactName: 'plan'
-          publishLocation: 'Container'
-
-      # - task: PublishBuildArtifacts@1
-      #   displayName: "Upload Plan Files"
-      #   inputs:
-      #     PathtoPublish: '$(work_dir)\${{ parameters.environment }}'
-      #     ArtifactName: 'terraform-plan'
-
+          targetPath: '$(work_dir)\${{ parameters.environment }}\plan.json'
+          artifact: 'terraform-plan'
+          publishLocation: filepath
 
 # --------------------------------
 # Stage 3: Infracost Cost Analysis
@@ -119,34 +116,28 @@ stages:
   - job: CostJob
     displayName: "Run Infracost"
     steps:
-      - task: DownloadBuildArtifacts@1
-        inputs:
-          buildType: 'specific'
-          project: '238bf90e-19f3-4345-848c-2ffe8cd3cb39'
-          pipeline: '8'
-          buildVersionToDownload: 'latest'
-          downloadType: 'specific'
-          itemPattern: '**.jason'
-          downloadPath: '$(work_dir)\${{ parameters.environment }}'
-      # - checkout: self
-      # - task: DownloadBuildArtifacts@0
-      #   displayName: "Download Terraform Plan Artifact"
-      #   inputs:
-      #     buildType: 'current'
-      #     downloadType: 'single'
-      #     artifactName: 'terraform-plan'
-      #     downloadPath: '$(System.DefaultWorkingDirectory)'
+      - checkout: self
+
+      # ✅ Correct artifact download
+      - download: current
+        artifact: terraform-plan
+
       - task: PowerShell@2
         displayName: "Run Infracost Breakdown"
         inputs:
           targetType: 'inline'
           script: |
-            cd '$(work_dir)\${{ parameters.environment }}'
-            infracost breakdown --path '$(System.ArtifactsDirectory)' plan.json --format html --out-file infracost.html
+            cd "$(Pipeline.Workspace)\terraform-plan"
+            infracost breakdown `
+              --path plan.json `
+              --format html `
+              --out-file infracost.html
+
             if ($LASTEXITCODE -ne 0) { exit 0 }
 
-      - task: PublishBuildArtifacts@1
+      - task: PublishPipelineArtifact@1
         displayName: "Upload Infracost Report"
         inputs:
-          PathtoPublish: '$(work_dir)\${{ parameters.environment }}\infracost.html'
-          ArtifactName: 'infracost-report'
+          targetPath: '$(Pipeline.Workspace)\terraform-plan\infracost.html'
+          artifact: 'infracost-report'
+          publishLocation: filepath
