@@ -39,15 +39,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-           tflint -f junit > $(Build.ArtifactStagingDirectory)/tflint.xml
-
-      - task: PublishBuildArtifacts@1
-        inputs:
-          PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-          ArtifactName: 'tflint'
-          publishLocation: 'Container'
-
-
+           tflint -f
 
       # tfsec -------------
       - task: PowerShell@2
@@ -56,8 +48,7 @@ stages:
           targetType: 'inline'
           script: |
            cd "$(work_dir)/${{ parameters.environment }}"
-           tfsec . -o junit > tfsec.xml
-
+           tfsec .
 
 
       # Checkov -----------
@@ -68,7 +59,7 @@ stages:
          targetType: 'inline'
          script: |
           cd "$(work_dir)/${{ parameters.environment }}"
-          checkov -d . --format junit --out tfsec.xml
+          checkov -d . 
           if ($LASTEXITCODE -ne 0) { exit 0 }
 
       # Trivy -------------
