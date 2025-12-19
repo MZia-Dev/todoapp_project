@@ -1,0 +1,140 @@
+name: todoapp_project
+trigger: none
+
+pool: todoapp_project
+
+
+variables:
+  work_dir: '$(System.DefaultWorkingDirectory)/environment'
+  S_conn: 'todoapp_project'
+
+
+parameters:
+  - name: environment
+    displayName: environment selection
+    type: string
+    default: prod
+    values:
+      - prod
+      - dev
+
+
+
+stages:
+
+# -------------------------
+# Stage 1: Static analysis
+# -------------------------
+- stage: StaticAnalysis
+  displayName: "Static analysis (tflint, tfsec, checkov, trivy)"
+  jobs:
+  - job: StaticAnalysisJob
+    displayName: "Run IaC lint & security scans"
+    steps:
+      - checkout: self
+
+      # TFLint ------------
+      - task: PowerShell@2
+        displayName: "Run tflint"
+        inputs:
+          targetType: 'inline'
+          script: |
+           cd "$(work_dir)/${{ parameters.environment }}"
+           tflint
+
+      # tfsec -------------
+      - task: PowerShell@2
+        displayName: "Run tfsec"
+        inputs:
+          targetType: 'inline'
+          script: |
+           cd "$(work_dir)/${{ parameters.environment }}"
+           tfsec .
+
+
+      # Checkov -----------
+      - task: PowerShell@2
+        continueOnError: true
+        displayName: "Run Checkov"
+        inputs:
+         targetType: 'inline'
+         script: |
+          cd "$(work_dir)/${{ parameters.environment }}"
+          checkov -d . --recursive
+
+          if ($LASTEXITCODE -ne 0) { exit 0 }
+
+      # Trivy -------------
+      - task: PowerShell@2
+        continueOnError: true
+        displayName: "Run Trivy"
+        inputs:
+         targetType: 'inline'
+         script: |
+          cd "$(work_dir)/${{ parameters.environment }}"
+          trivy fs . --skip-db-update --skip-java-db-update --offline-scan --security-checks vuln
+          if ($LASTEXITCODE -ne 0) { exit 0 }
+
+
+# -------------------------------
+# Stage 2: Terraform Init + Plan
+# -------------------------------
+- stage: Plan
+  displayName: "Terraform Init & Plan"
+  dependsOn: StaticAnalysis
+  jobs:
+  - job: PlanJob
+    displayName: "Run Terraform Init & Plan"
+    steps:
+      - checkout: self
+      - task: TerraformTask@5
+        inputs:
+          provider: 'azurerm'
+          command: 'init'
+          workingDirectory: $(work_dir)/${{ parameters.environment }}
+          backendServiceArm: 'todoapp_project'
+          backendAzureRmStorageAccountName: 'backend22'
+          backendAzureRmContainerName: 'todoappinfra'
+          backendAzureRmKey: 'prod_todoapp.tfstate'
+      - task: TerraformTask@5
+        inputs:
+          provider: 'azurerm'
+          command: 'plan'
+          workingDirectory: $(work_dir)/${{ parameters.environment }}
+          environmentServiceNameAzureRM: 'todoapp_project'
+
+# # --------------------------------
+# # Stage 3: Infracost Cost Analysis
+# # --------------------------------
+# - stage: CostAnalysis
+#   displayName: "Infracost Cost Estimation"
+#   dependsOn: Plan
+#   jobs:
+#   - job: CostJob
+#     displayName: "Run Infracost"
+#     steps:
+#       - checkout: self      
+#       - download: current
+#         artifact: terraform-plan
+
+      
+#       - task: PowerShell@2
+#         displayName: "Run Infracost Breakdown"
+#         inputs:
+#          targetType: 'inline'
+#          script: |
+#           cd "$(Pipeline.Workspace)/terraform-plan"
+
+#           infracost breakdown `
+#            --path plan.json `
+#            --format html `
+#            --out-file infracost.html
+
+#            if ($LASTEXITCODE -ne 0) { exit 0 }
+
+#       - task: PublishPipelineArtifact@1
+#         displayName: "Upload Infracost Report"
+#         inputs:
+#           targetPath: '$(Pipeline.Workspace)\terraform-plan\infracost.html'
+#           artifact: 'infracost-report'
+          
