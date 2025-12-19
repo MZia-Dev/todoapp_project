@@ -28,28 +28,25 @@ stages:
     steps:
       - checkout: self
 
-      # TFLint ------------
       - task: PowerShell@2
-        displayName: "Run TFLint"
+        displayName: "TFLint Scan"
         inputs:
           targetType: 'inline'
           script: |
             cd "$(work_dir)\${{ parameters.environment }}"
             tflint --recursive
 
-      # tfsec -------------
       - task: PowerShell@2
-        displayName: "Run tfsec"
+        displayName: "tfsec Scan"
         inputs:
           targetType: 'inline'
           script: |
             cd "$(work_dir)\${{ parameters.environment }}"
             tfsec .
 
-      # Checkov -----------
       - task: PowerShell@2
         continueOnError: true
-        displayName: "Run Checkov"
+        displayName: "Checkov Scan"
         inputs:
           targetType: 'inline'
           script: |
@@ -57,17 +54,15 @@ stages:
             checkov -d .
             if ($LASTEXITCODE -ne 0) { exit 0 }
 
-      # Trivy -------------
       - task: PowerShell@2
         continueOnError: true
-        displayName: "Run Trivy"
+        displayName: "Trivy Scan"
         inputs:
           targetType: 'inline'
           script: |
             cd "$(work_dir)\${{ parameters.environment }}"
             trivy fs . --skip-db-update --skip-java-db-update --offline-scan --security-checks vuln
             if ($LASTEXITCODE -ne 0) { exit 0 }
-
 
 # -------------------------------
 # Stage 2: Terraform Init + Plan
@@ -95,6 +90,13 @@ stages:
           script: |
             cd "$(work_dir)\${{ parameters.environment }}"
             terraform plan -out tfplan.binary
+
+      - task: PowerShell@2
+        displayName: "Terraform Show (JSON)"
+        inputs:
+          targetType: 'inline'
+          script: |
+            cd "$(work_dir)\${{ parameters.environment }}"
             terraform show -json tfplan.binary > plan.json
 
       - task: PublishBuildArtifacts@1
@@ -102,7 +104,6 @@ stages:
         inputs:
           PathtoPublish: '$(work_dir)\${{ parameters.environment }}'
           ArtifactName: 'terraform-plan'
-
 
 # --------------------------------
 # Stage 3: Infracost Cost Analysis
@@ -116,7 +117,7 @@ stages:
     steps:
 
       - task: PowerShell@2
-        displayName: "Run Infracost Breakdown"
+        displayName: "Infracost Breakdown"
         inputs:
           targetType: 'inline'
           script: |
