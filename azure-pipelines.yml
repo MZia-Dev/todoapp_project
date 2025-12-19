@@ -3,6 +3,12 @@ trigger: none
 
 pool: todoapp_project
 
+
+variables:
+  work_dir: '$(System.DefaultWorkingDirectory)/environment'
+  S_conn: 'todoapp_project'
+
+
 parameters:
   - name: environment
     displayName: environment selection
@@ -12,9 +18,7 @@ parameters:
       - prod
       - dev
 
-variables:
-  work_dir: '$(System.DefaultWorkingDirectory)/environment'
-  S_conn: 'todoapp_project'
+
 
 stages:
 
