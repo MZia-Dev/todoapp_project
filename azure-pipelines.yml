@@ -125,16 +125,16 @@ stages:
       - task: PowerShell@2
         displayName: "Run Infracost Breakdown"
         inputs:
-          targetType: 'inline'
-          script: |
-            $(Pipeline.Workspace)/terraform-plan/plan.json
-            
-            infracost breakdown `
-              --path plan.json `
-              --format html `
-              --out-file infracost.html
+         targetType: 'inline'
+         script: |
+          cd "$(Pipeline.Workspace)\terraform-plan"
 
-            if ($LASTEXITCODE -ne 0) { exit 0 }
+          infracost breakdown `
+           --path plan.json `
+           --format html `
+           --out-file infracost.html
+
+           if ($LASTEXITCODE -ne 0) { exit 0 }
 
       - task: PublishPipelineArtifact@1
         displayName: "Upload Infracost Report"
