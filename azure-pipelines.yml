@@ -127,7 +127,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            cd "$(Pipeline.Workspace)\terraform-plan"
+            $(Pipeline.Workspace)/terraform-plan/plan.json
             infracost breakdown `
               --path plan.json `
               --format html `
