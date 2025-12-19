@@ -27,6 +27,7 @@ stages:
     steps:
       - checkout: self
 
+      # TFLint ------------
       - task: PowerShell@2
         displayName: "Run TFLint"
         inputs:
@@ -35,6 +36,7 @@ stages:
             cd "$(work_dir)\${{ parameters.environment }}"
             tflint --recursive
 
+      # tfsec -------------
       - task: PowerShell@2
         displayName: "Run tfsec"
         inputs:
@@ -42,20 +44,23 @@ stages:
           script: |
             cd "$(work_dir)\${{ parameters.environment }}"
             tfsec .
+
+      # Checkov -----------
       - task: PowerShell@2
+        continueOnError: true
         displayName: "Run Checkov"
         inputs:
          targetType: 'inline'
          script: |
           cd "$(work_dir)\${{ parameters.environment }}"
           checkov -d .
-          if ($LASTEXITCODE -ne 0) { exit 0 }          
+
+      # Trivy -------------
       - task: PowerShell@2
+        continueOnError: true
         displayName: "Run Trivy"
         inputs:
          targetType: 'inline'
          script: |
           cd "$(work_dir)\${{ parameters.environment }}"
           trivy fs . --skip-db-update --skip-java-db-update --offline-scan --security-checks vuln
-          if ($LASTEXITCODE -ne 0) { exit 0 }
-
