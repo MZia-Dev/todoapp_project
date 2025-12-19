@@ -54,7 +54,7 @@ stages:
          targetType: 'inline'
          script: |
           cd "$(work_dir)\${{ parameters.environment }}"
-          checkov -d .
+          'checkov -d . -o junitxml > checkov.xml'
           if ($LASTEXITCODE -ne 0) { exit 0 }
 
       # Trivy -------------
