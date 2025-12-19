@@ -16,6 +16,7 @@ variables:
   S_conn: 'todoapp_project'
 
 stages:
+
 # -------------------------
 # Stage 1: Static analysis
 # -------------------------
@@ -50,19 +51,81 @@ stages:
         continueOnError: true
         displayName: "Run Checkov"
         inputs:
-         targetType: 'inline'
-         script: |
-          cd "$(work_dir)\${{ parameters.environment }}"
-          checkov -d .
-          if ($LASTEXITCODE -ne 0) { exit 0 }
+          targetType: 'inline'
+          script: |
+            cd "$(work_dir)\${{ parameters.environment }}"
+            checkov -d .
+            if ($LASTEXITCODE -ne 0) { exit 0 }
 
       # Trivy -------------
       - task: PowerShell@2
         continueOnError: true
         displayName: "Run Trivy"
         inputs:
-         targetType: 'inline'
-         script: |
-          cd "$(work_dir)\${{ parameters.environment }}"
-          trivy fs . --skip-db-update --skip-java-db-update --offline-scan --security-checks vuln
-          if ($LASTEXITCODE -ne 0) { exit 0 }
+          targetType: 'inline'
+          script: |
+            cd "$(work_dir)\${{ parameters.environment }}"
+            trivy fs . --skip-db-update --skip-java-db-update --offline-scan --security-checks vuln
+            if ($LASTEXITCODE -ne 0) { exit 0 }
+
+
+# -------------------------
+# Stage 2: Terraform Init + Plan
+# -------------------------
+- stage: Plan
+  displayName: "Terraform Init & Plan"
+  dependsOn: StaticAnalysis
+  jobs:
+  - job: PlanJob
+    displayName: "Run Terraform Init & Plan"
+    steps:
+
+      - task: PowerShell@2
+        displayName: "Terraform Init"
+        inputs:
+          targetType: 'inline'
+          script: |
+            cd "$(work_dir)\${{ parameters.environment }}"
+            terraform init
+
+      - task: PowerShell@2
+        displayName: "Terraform Plan"
+        inputs:
+          targetType: 'inline'
+          script: |
+            cd "$(work_dir)\${{ parameters.environment }}"
+            terraform plan -out tfplan.binary
+            terraform show -json tfplan.binary > plan.json
+
+      - task: PublishBuildArtifacts@1
+        displayName: "Upload Plan Files"
+        inputs:
+          PathtoPublish: '$(work_dir)\${{ parameters.environment }}'
+          ArtifactName: 'terraform-plan'
+
+
+# -------------------------
+# Stage 3: Infracost Cost Analysis
+# -------------------------
+- stage: CostAnalysis
+  displayName: "Infracost Cost Estimation"
+  dependsOn: Plan
+  jobs:
+  - job: CostJob
+    displayName: "Run Infracost"
+    steps:
+
+      - task: PowerShell@2
+        displayName: "Run Infracost Breakdown"
+        inputs:
+          targetType: 'inline'
+          script: |
+            cd "$(work_dir)\${{ parameters.environment }}"
+            infracost breakdown --path plan.json --format html --out-file infracost.html
+            if ($LASTEXITCODE -ne 0) { exit 0 }
+
+      - task: PublishBuildArtifacts@1
+        displayName: "Upload Infracost Report"
+        inputs:
+          PathtoPublish: '$(work_dir)\${{ parameters.environment }}\infracost.html'
+          ArtifactName: 'infracost-report'
