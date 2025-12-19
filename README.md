@@ -1,4 +1,4 @@
-🌟 TodoApp Project — Modular Terraform Azure Infrastructure (Prod/Dev)
+🌟** TodoApp Project — Modular Terraform Azure Infrastructure (Prod/Dev)
 
 A fully modular, production‑ready Terraform project that deploys a complete Azure environment for a two‑tier Todo Application. This repository follows real‑world DevOps and IaC best practices, featuring reusable modules, multi‑environment structure, automated security scanning, and CI/CD integration using Azure DevOps Pipelines.
 
