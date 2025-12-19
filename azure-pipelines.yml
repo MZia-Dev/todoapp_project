@@ -30,12 +30,12 @@ stages:
 
       # TFLint ------------
       - task: PowerShell@2
-        displayName: "Run TFLint"
+        displayName: "Run tflint"
         inputs:
           targetType: 'inline'
           script: |
-            cd "$(work_dir)\${{ parameters.environment }}"
-            tflint --recursive  --format junit --out tfsec.xml
+           cd "$(work_dir)\${{ parameters.environment }}"
+           tflint --recursive --format junit --out tflint.xml
 
       # tfsec -------------
       - task: PowerShell@2
@@ -43,8 +43,10 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            cd "$(work_dir)\${{ parameters.environment }}"
-            tfsec . --format junit --out tfsec.xml
+           cd "$(work_dir)\${{ parameters.environment }}"
+           tfsec . --format junit --out tfsec.xml
+
+
 
       # Checkov -----------
       - task: PowerShell@2
