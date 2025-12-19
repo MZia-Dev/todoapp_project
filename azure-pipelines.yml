@@ -12,7 +12,7 @@ parameters:
       - dev
 
 variables:
-  work_dir: '$(System.DefaultWorkingDirectory)/environment'
+  work_dir: '$(System.DefaultWorkingDirectory)\environment'
   S_conn: 'todoapp_project'
 
 stages:
