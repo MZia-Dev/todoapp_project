@@ -1,0 +1,65 @@
+name: todoapp_project
+trigger: none
+pool: todoapp_project
+
+parameters:
+  - name: environment
+    displayName: environment selection
+    type: string
+    default: prod
+    values:
+      - prod
+      - dev
+
+variables:
+  work_dir: '$(System.DefaultWorkingDirectory)/environment'
+  S_conn: 'todoapp_project'
+
+stages:
+# -------------------------
+# Stage 1: Static analysis
+# -------------------------
+- stage: StaticAnalysis
+  displayName: "Static analysis (tflint, tfsec, checkov, trivy)"
+  jobs:
+  - job: StaticAnalysisJob
+    displayName: "Run IaC lint & security scans"
+    steps:
+      - checkout: self
+
+        # TFLint
+      - task: PowerShell@2
+        displayName: "Run TFLint"
+        inputs:
+          targetType: 'inline'
+          script: |
+            cd "$(System.DefaultWorkingDirectory)/environment/${{ parameters.environment }}"
+            tflint --recursive
+
+        # tfsec
+      - task: PowerShell@2
+        displayName: "Run tfsec"
+        inputs:
+          targetType: 'inline'
+          script: |
+            cd "$(System.DefaultWorkingDirectory)/environment/${{ parameters.environment }}"
+            tfsec .
+            
+            # Checkov
+      - task: PowerShell@2
+        displayName: "Run Checkov"
+        inputs:
+          targetType: 'inline'
+          script: |
+            cd "$(System.DefaultWorkingDirectory)/environment/${{ parameters.environment }}"
+            checkov -d .
+
+      # Trivy
+      - task: PowerShell@2
+        displayName: "Run Trivy"
+        inputs:
+          targetType: 'inline'
+          script: |
+            cd "$(System.DefaultWorkingDirectory)/environment/${{ parameters.environment }}"
+            trivy fs .
+
