@@ -91,6 +91,7 @@ stages:
         inputs:
           provider: 'azurerm'
           command: 'init'
+          workingDirectory: $(work_dir)/${{ parameters.environment }}
           backendServiceArm: 'todoapp_project'
           backendAzureRmStorageAccountName: 'backend22'
           backendAzureRmContainerName: 'todoappinfra'
@@ -99,6 +100,7 @@ stages:
         inputs:
           provider: 'azurerm'
           command: 'plan'
+          workingDirectory: $(work_dir)/${{ parameters.environment }}
           environmentServiceNameAzureRM: 'todoapp_project'
 
 # --------------------------------
