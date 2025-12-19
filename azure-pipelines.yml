@@ -26,6 +26,11 @@ stages:
     displayName: "Run IaC lint & security scans"
     steps:
       - checkout: self
+      - script: |
+          echo "OS: $env:OS"
+        displayName: "Check OS"
+
+
       - task: PowerShell@2
         inputs:
           targetType: 'inline'
