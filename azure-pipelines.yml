@@ -44,7 +44,7 @@ stages:
           targetType: 'inline'
           script: |
             cd "$(work_dir)\${{ parameters.environment }}"
-            'tfsec . -o junitxml > tfsec.xml'
+            tfsec . --format junit --out tfsec.xml
 
       # Checkov -----------
       - task: PowerShell@2
