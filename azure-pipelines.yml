@@ -33,7 +33,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            cd "$(System.DefaultWorkingDirectory)/environment/${{ parameters.environment }}"
+            cd "$(work_dir)\${{ parameters.environment }}"
             tflint --recursive
 
         # tfsec
@@ -42,7 +42,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            cd "$(System.DefaultWorkingDirectory)/environment/${{ parameters.environment }}"
+            cd "$(work_dir)\${{ parameters.environment }}"
             tfsec .
             
             # Checkov
@@ -51,7 +51,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            cd "$(System.DefaultWorkingDirectory)/environment/${{ parameters.environment }}"
+            cd "$(work_dir)\${{ parameters.environment }}"
             checkov -d .
 
       # Trivy
@@ -60,6 +60,6 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            cd "$(System.DefaultWorkingDirectory)/environment/${{ parameters.environment }}"
+            cd "$(work_dir)\${{ parameters.environment }}"
             trivy fs .
 
