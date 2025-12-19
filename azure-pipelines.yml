@@ -94,31 +94,14 @@ stages:
     displayName: "Run Terraform Init & Plan"
     steps:
       - checkout: self
-
-      - task: PowerShell@2
-        displayName: "Terraform Init"
+      - task: TerraformTask@5
         inputs:
-          targetType: 'inline'
-          script: |
-            cd "$(work_dir)/${{ parameters.environment }}"
-            terraform init
-
-      - task: PowerShell@2
-        displayName: "Terraform Plan"
-        inputs:
-          targetType: 'inline'
-          script: |
-            cd "$(work_dir)/${{ parameters.environment }}"
-            terraform plan -out tfplan.binary
-            terraform show -json tfplan.binary > plan.json
-
-      
-      - task: PublishPipelineArtifact@1
-        displayName: "Publish Terraform Plan JSON"
-        inputs:
-          targetPath: '$(work_dir)/${{ parameters.environment }}\plan.json'
-          artifact: 'terraform-plan'
-          
+          provider: 'azurerm'
+          command: 'init'
+          backendServiceArm: 'todoapp_project'
+          backendAzureRmStorageAccountName: 'backend22'
+          backendAzureRmContainerName: 'todoappinfra'
+          backendAzureRmKey: 'prod_todoapp.tfstate'
 
 # --------------------------------
 # Stage 3: Infracost Cost Analysis
