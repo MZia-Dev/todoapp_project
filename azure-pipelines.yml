@@ -20,72 +20,61 @@ stages:
 # -------------------------
 # Stage 1: Static analysis
 # -------------------------
-- stage: StaticAnalysis1
-  displayName: "Static analysis tflint"
+- stage: StaticAnalysis
+  displayName: "Static analysis (tflint, tfsec, checkov, trivy)"
   jobs:
   - job: StaticAnalysisJob
     displayName: "Run IaC lint & security scans"
     steps:
       - checkout: self
 
+      # TFLint ------------
       - task: PowerShell@2
-        displayName: "TFLint Scan"
+        displayName: "Run TFLint"
         inputs:
           targetType: 'inline'
           script: |
             cd "$(work_dir)\${{ parameters.environment }}"
             tflint --recursive
 
-- stage: StaticAnalysis2
-  displayName: "Static analysis tfsec"
-  jobs:
-   - job: StaticAnalysisJob
-     displayName: "Run IaC tfsec & security scans"
-     steps:
-     - task: PowerShell@2
-       displayName: "tfsec Scan"
-       inputs:
-        targetType: 'inline'
-        script: |
-          cd "$(work_dir)\${{ parameters.environment }}"
-          tfsec .
-          
-- stage: StaticAnalysis3
-  displayName: "Static analysis Checkov"
-  jobs:
-   - job: StaticAnalysisJob
-     displayName: "Run Checkov"
-     steps:
-     - task: PowerShell@2        
-       displayName: "Checkov Scan"
-       inputs:
-        targetType: 'inline'
-        script: |
-            cd "$(work_dir)\${{ parameters.environment }}"
-            checkov -d .
-            if ($LASTEXITCODE -ne 0) { exit 0 }
-
-- stage: StaticAnalysis4
-  displayName: "Static analysis trivy"
-  jobs:
-   - job: StaticAnalysisJob
-     displayName: "Run IaC trivy"
-     steps:
-      - task: PowerShell@2        
-        displayName: "Trivy Scan"
+      # tfsec -------------
+      - task: PowerShell@2
+        displayName: "Run tfsec"
         inputs:
           targetType: 'inline'
           script: |
             cd "$(work_dir)\${{ parameters.environment }}"
-            trivy fs . --skip-db-update --skip-java-db-update --offline-scan --security-checks vuln
-            if ($LASTEXITCODE -ne 0) { exit 0 }
+            tfsec .
+
+      # Checkov -----------
+      - task: PowerShell@2
+        continueOnError: true
+        displayName: "Run Checkov"
+        inputs:
+         targetType: 'inline'
+         script: |
+          cd "$(work_dir)\${{ parameters.environment }}"
+          checkov -d .
+          if ($LASTEXITCODE -ne 0) { exit 0 }
+
+      # Trivy -------------
+      - task: PowerShell@2
+        continueOnError: true
+        displayName: "Run Trivy"
+        inputs:
+         targetType: 'inline'
+         script: |
+          cd "$(work_dir)\${{ parameters.environment }}"
+          trivy fs . --skip-db-update --skip-java-db-update --offline-scan --security-checks vuln
+          if ($LASTEXITCODE -ne 0) { exit 0 }
+
 
 # -------------------------------
 # Stage 2: Terraform Init + Plan
 # -------------------------------
 - stage: Plan
   displayName: "Terraform Init & Plan"
-  dependsOn: StaticAnalysis4
+  dependsOn: StaticAnalysis
   jobs:
   - job: PlanJob
     displayName: "Run Terraform Init & Plan"
@@ -106,13 +95,6 @@ stages:
           script: |
             cd "$(work_dir)\${{ parameters.environment }}"
             terraform plan -out tfplan.binary
-
-      - task: PowerShell@2
-        displayName: "Terraform Show (JSON)"
-        inputs:
-          targetType: 'inline'
-          script: |
-            cd "$(work_dir)\${{ parameters.environment }}"
             terraform show -json tfplan.binary > plan.json
 
       - task: PublishBuildArtifacts@1
@@ -120,6 +102,7 @@ stages:
         inputs:
           PathtoPublish: '$(work_dir)\${{ parameters.environment }}'
           ArtifactName: 'terraform-plan'
+
 
 # --------------------------------
 # Stage 3: Infracost Cost Analysis
@@ -131,9 +114,10 @@ stages:
   - job: CostJob
     displayName: "Run Infracost"
     steps:
+      - checkout: self
 
       - task: PowerShell@2
-        displayName: "Infracost Breakdown"
+        displayName: "Run Infracost Breakdown"
         inputs:
           targetType: 'inline'
           script: |
