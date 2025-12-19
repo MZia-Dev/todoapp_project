@@ -104,7 +104,7 @@ stages:
         inputs:
           targetPath: '$(work_dir)\${{ parameters.environment }}\plan.json'
           artifact: 'terraform-plan'
-          publishLocation: pipeline
+          
 
 # --------------------------------
 # Stage 3: Infracost Cost Analysis
