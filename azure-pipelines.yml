@@ -12,7 +12,7 @@ parameters:
       - dev
 
 variables:
-  work_dir: '$(System.DefaultWorkingDirectory)\environment'
+  work_dir: '$(System.DefaultWorkingDirectory)/environment'
   S_conn: 'todoapp_project'
 
 stages:
@@ -34,7 +34,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-           tflint --chdir "$(work_dir)\${{ parameters.environment }}" --format junit > "$(work_dir)\${{ parameters.environment }}\tflint.xml"
+           tflint --chdir "$(work_dir)/${{ parameters.environment }}" --format junit > "$(work_dir)/${{ parameters.environment }}/tflint.xml"
 
 
 
@@ -44,7 +44,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-           cd "$(work_dir)\${{ parameters.environment }}"
+           cd "$(work_dir)/${{ parameters.environment }}"
            tfsec . --format junit tfsec.xml
 
 
@@ -56,7 +56,7 @@ stages:
         inputs:
          targetType: 'inline'
          script: |
-          cd "$(work_dir)\${{ parameters.environment }}"
+          cd "$(work_dir)/${{ parameters.environment }}"
           checkov -d . --format junit --out tfsec.xml
           if ($LASTEXITCODE -ne 0) { exit 0 }
 
@@ -67,7 +67,7 @@ stages:
         inputs:
          targetType: 'inline'
          script: |
-          cd "$(work_dir)\${{ parameters.environment }}"
+          cd "$(work_dir)/${{ parameters.environment }}"
           trivy fs . --skip-db-update --skip-java-db-update --offline-scan --security-checks vuln
           if ($LASTEXITCODE -ne 0) { exit 0 }
 
@@ -89,7 +89,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            cd "$(work_dir)\${{ parameters.environment }}"
+            cd "$(work_dir)/${{ parameters.environment }}"
             terraform init
 
       - task: PowerShell@2
@@ -97,7 +97,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            cd "$(work_dir)\${{ parameters.environment }}"
+            cd "$(work_dir)/${{ parameters.environment }}"
             terraform plan -out tfplan.binary
             terraform show -json tfplan.binary > plan.json
 
@@ -105,7 +105,7 @@ stages:
       - task: PublishPipelineArtifact@1
         displayName: "Publish Terraform Plan JSON"
         inputs:
-          targetPath: '$(work_dir)\${{ parameters.environment }}\plan.json'
+          targetPath: '$(work_dir)/${{ parameters.environment }}\plan.json'
           artifact: 'terraform-plan'
           
 
@@ -130,7 +130,7 @@ stages:
         inputs:
          targetType: 'inline'
          script: |
-          cd "$(Pipeline.Workspace)\terraform-plan"
+          cd "$(Pipeline.Workspace)/terraform-plan"
 
           infracost breakdown `
            --path plan.json `
