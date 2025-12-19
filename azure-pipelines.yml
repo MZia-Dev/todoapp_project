@@ -115,20 +115,20 @@ stages:
     displayName: "Run Infracost"
     steps:
       - checkout: self
-      - task: DownloadBuildArtifacts@0
-        displayName: "Download Terraform Plan Artifact"
-        inputs:
-          buildType: 'current'
-          downloadType: 'single'
-          artifactName: 'terraform-plan'
-          downloadPath: '$(System.DefaultWorkingDirectory)'
+      # - task: DownloadBuildArtifacts@0
+      #   displayName: "Download Terraform Plan Artifact"
+      #   inputs:
+      #     buildType: 'current'
+      #     downloadType: 'single'
+      #     artifactName: 'terraform-plan'
+      #     downloadPath: '$(System.DefaultWorkingDirectory)'
       - task: PowerShell@2
         displayName: "Run Infracost Breakdown"
         inputs:
           targetType: 'inline'
           script: |
-            cd "$(work_dir)"
-            infracost breakdown --path plan.json --format html --out-file infracost.html
+            cd '$(work_dir)\${{ parameters.environment }}'
+            infracost breakdown --path . plan.json --format html --out-file infracost.html
             if ($LASTEXITCODE -ne 0) { exit 0 }
 
       - task: PublishBuildArtifacts@1
