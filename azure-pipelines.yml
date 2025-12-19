@@ -53,6 +53,7 @@ stages:
       - task: PowerShell@2
         displayName: "Run Trivy"
         inputs:
-          targetType: 'inline'
-          script: trivy fs .
-
+         targetType: 'inline'
+         script: |
+          cd "$(work_dir)\${{ parameters.environment }}"
+          trivy fs .
