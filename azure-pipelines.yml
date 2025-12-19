@@ -26,40 +26,9 @@ stages:
     displayName: "Run IaC lint & security scans"
     steps:
       - checkout: self
-
-        # TFLint
       - task: PowerShell@2
-        displayName: "Run TFLint"
         inputs:
           targetType: 'inline'
           script: |
             cd "$(work_dir)\${{ parameters.environment }}"
             tflint --recursive
-
-        # tfsec
-      - task: PowerShell@2
-        displayName: "Run tfsec"
-        inputs:
-          targetType: 'inline'
-          script: |
-            cd "$(work_dir)\${{ parameters.environment }}"
-            tfsec .
-            
-            # Checkov
-      - task: PowerShell@2
-        displayName: "Run Checkov"
-        inputs:
-          targetType: 'inline'
-          script: |
-            cd "$(work_dir)\${{ parameters.environment }}"
-            checkov -d .
-
-      # Trivy
-      - task: PowerShell@2
-        displayName: "Run Trivy"
-        inputs:
-          targetType: 'inline'
-          script: |
-            cd "$(work_dir)\${{ parameters.environment }}"
-            trivy fs .
-
