@@ -26,14 +26,19 @@ stages:
     displayName: "Run IaC lint & security scans"
     steps:
       - checkout: self
-      - script: |
-          echo "OS: $env:OS"
-        displayName: "Check OS"
-
 
       - task: PowerShell@2
+        displayName: "Run TFLint"
         inputs:
           targetType: 'inline'
           script: |
             cd "$(work_dir)\${{ parameters.environment }}"
             tflint --recursive
+
+      - task: PowerShell@2
+        displayName: "Run tfsec"
+        inputs:
+          targetType: 'inline'
+          script: |
+            cd "$(work_dir)\${{ parameters.environment }}"
+            tfsec .
