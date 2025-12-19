@@ -102,6 +102,11 @@ stages:
           backendAzureRmStorageAccountName: 'backend22'
           backendAzureRmContainerName: 'todoappinfra'
           backendAzureRmKey: 'prod_todoapp.tfstate'
+      - task: TerraformTask@5
+        inputs:
+          provider: 'azurerm'
+          command: 'plan'
+          environmentServiceNameAzureRM: 'todoapp_project'
 
 # --------------------------------
 # Stage 3: Infracost Cost Analysis
