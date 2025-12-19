@@ -103,38 +103,38 @@ stages:
           workingDirectory: $(work_dir)/${{ parameters.environment }}
           environmentServiceNameAzureRM: 'todoapp_project'
 
-# --------------------------------
-# Stage 3: Infracost Cost Analysis
-# --------------------------------
-- stage: CostAnalysis
-  displayName: "Infracost Cost Estimation"
-  dependsOn: Plan
-  jobs:
-  - job: CostJob
-    displayName: "Run Infracost"
-    steps:
-      - checkout: self      
-      - download: current
-        artifact: terraform-plan
+# # --------------------------------
+# # Stage 3: Infracost Cost Analysis
+# # --------------------------------
+# - stage: CostAnalysis
+#   displayName: "Infracost Cost Estimation"
+#   dependsOn: Plan
+#   jobs:
+#   - job: CostJob
+#     displayName: "Run Infracost"
+#     steps:
+#       - checkout: self      
+#       - download: current
+#         artifact: terraform-plan
 
       
-      - task: PowerShell@2
-        displayName: "Run Infracost Breakdown"
-        inputs:
-         targetType: 'inline'
-         script: |
-          cd "$(Pipeline.Workspace)/terraform-plan"
+#       - task: PowerShell@2
+#         displayName: "Run Infracost Breakdown"
+#         inputs:
+#          targetType: 'inline'
+#          script: |
+#           cd "$(Pipeline.Workspace)/terraform-plan"
 
-          infracost breakdown `
-           --path plan.json `
-           --format html `
-           --out-file infracost.html
+#           infracost breakdown `
+#            --path plan.json `
+#            --format html `
+#            --out-file infracost.html
 
-           if ($LASTEXITCODE -ne 0) { exit 0 }
+#            if ($LASTEXITCODE -ne 0) { exit 0 }
 
-      - task: PublishPipelineArtifact@1
-        displayName: "Upload Infracost Report"
-        inputs:
-          targetPath: '$(Pipeline.Workspace)\terraform-plan\infracost.html'
-          artifact: 'infracost-report'
+#       - task: PublishPipelineArtifact@1
+#         displayName: "Upload Infracost Report"
+#         inputs:
+#           targetPath: '$(Pipeline.Workspace)\terraform-plan\infracost.html'
+#           artifact: 'infracost-report'
           
