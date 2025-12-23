@@ -103,20 +103,20 @@ stages:
           workingDirectory: $(work_dir)/${{ parameters.environment }}
           environmentServiceNameAzureRM: 'todoapp_project'
 
-# --------------------------------
-# Stage 3: Infracost Cost Analysis
-# --------------------------------
-- stage: CostAnalysis
-  displayName: "Infracost Cost Estimation"
-  dependsOn: Plan
-  jobs:
-  - job: CostJob
-    displayName: "Run Infracost"
-    steps:
-    - task: CmdLine@2
-      inputs:
-        script: 'infracost breakdown --path .'
-        workingDirectory: '$(work_dir)/${{ parameters.environment }}'
+# # --------------------------------
+# # Stage 3: Infracost Cost Analysis
+# # --------------------------------
+# - stage: CostAnalysis
+#   displayName: "Infracost Cost Estimation"
+#   dependsOn: Plan
+#   jobs:
+#   - job: CostJob
+#     displayName: "Run Infracost"
+#     steps:
+#     - task: CmdLine@2
+#       inputs:
+#         script: 'infracost breakdown --path .'
+#         workingDirectory: '$(work_dir)/${{ parameters.environment }}'
 
       
 #       - task: PowerShell@2
