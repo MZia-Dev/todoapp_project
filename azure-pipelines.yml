@@ -44,9 +44,8 @@ stages:
         displayName: "Run tfsec"
         inputs:
           targetType: 'inline'
-          script: |
-           cd "$(work_dir)/${{ parameters.environment }}"
-           tfsec .
+          script: 'tfsec .'
+          workingDirectory: '$(work_dir)/${{ parameters.environment }}'
 
 
       # Checkov -----------
