@@ -40,8 +40,8 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-           cd "$(work_dir)/$(env)"
-           tflint
+            cd "$(work_dir)/$(env)"
+            tflint
 
       # tfsec -------------
       - task: PowerShell@2
@@ -49,43 +49,42 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-           cd "$(work_dir)/$(env)"
-           tfsec .
+            cd "$(work_dir)/$(env)"
+            tfsec .
 
-# Checkov -----------
-     - task: PowerShell@2
-       continueOnError: true
-       displayName: "Run Checkov"
-       inputs:
-         targetType: 'inline'
-         script: |
-         cd "$(work_dir)/$(env)"
+      # Checkov -----------
+      - task: PowerShell@2
+        continueOnError: true
+        displayName: "Run Checkov"
+        inputs:
+          targetType: 'inline'
+          script: |
+            cd "$(work_dir)/$(env)"
 
-      # Run Checkov with JUnit XML output
-         checkov -d . --recursive `
-        -o junitxml `
-        --output-file-path "$(work_dir)/checkov-report.xml"
+            # Run Checkov with JUnit XML output
 
-      # Prevent pipeline failure
-      if ($LASTEXITCODE -ne 0) { exit 0 }
-    - task: PublishTestResults@2
-      displayName: "Publish Checkov Test Results"
-      inputs:
-        testResultsFormat: "JUnit"
-        testResultsFiles: "$(System.DefaultWorkingDirectory)/checkov-report.xml"
-        failTaskOnFailedTests: false
+            checkov -d . --recursive -o junitxml --output-file-path "$(work_dir)/checkov-report.xml"
+             
+            # Prevent pipeline failure
+            if ($LASTEXITCODE -ne 0) { exit 0 }
 
+      - task: PublishTestResults@2
+        displayName: "Publish Checkov Test Results"
+        inputs:
+          testResultsFormat: "JUnit"
+          testResultsFiles: "$(System.DefaultWorkingDirectory)/checkov-report.xml"
+          failTaskOnFailedTests: false
 
       # Trivy -------------
-    - task: PowerShell@2
+      - task: PowerShell@2
         continueOnError: true
         displayName: "Run Trivy"
         inputs:
-         targetType: 'inline'
-         script: |
-          cd "$(work_dir)/$(env)"
-          trivy fs . --skip-db-update --skip-java-db-update --offline-scan --security-checks vuln
-          if ($LASTEXITCODE -ne 0) { exit 0 }
+          targetType: 'inline'
+          script: |
+            cd "$(work_dir)/$(env)"
+            trivy fs . --skip-db-update --skip-java-db-update --offline-scan --security-checks vuln
+            if ($LASTEXITCODE -ne 0) { exit 0 }
 
 
 # -------------------------------
