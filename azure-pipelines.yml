@@ -59,13 +59,10 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            cd "$(work_dir)/$(env)"
-
-            # Run Checkov with JUnit XML output
-
+            cd "$(work_dir)/$(env)"            
             checkov -d . --recursive -o junitxml --output-file-path "$(work_dir)/checkov-report.xml"
              
-            # Prevent pipeline failure
+            
             if ($LASTEXITCODE -ne 0) { exit 0 }
 
       - task: PublishTestResults@2
