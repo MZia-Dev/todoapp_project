@@ -7,6 +7,7 @@ pool: todoapp_project
 variables:
   work_dir: '$(System.DefaultWorkingDirectory)/environment'
   S_conn: 'todoapp_project'
+  env: ${{ parameters.environment }}
 
 
 parameters:
@@ -39,7 +40,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-           cd "$(work_dir)/${{ parameters.environment }}"
+           cd "$(work_dir)/$(env)"
            tflint
 
       # tfsec -------------
@@ -48,30 +49,41 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-           cd "$(work_dir)/${{ parameters.environment }}"
+           cd "$(work_dir)/$(env)"
            tfsec .
 
-
-      # Checkov -----------
-      - task: PowerShell@2
-        continueOnError: true
-        displayName: "Run Checkov"
-        inputs:
+# Checkov -----------
+     - task: PowerShell@2
+       continueOnError: true
+       displayName: "Run Checkov"
+       inputs:
          targetType: 'inline'
          script: |
-          cd "$(work_dir)/${{ parameters.environment }}"
-          checkov -d . --recursive
+         cd "$(work_dir)/$(env)"
 
-          if ($LASTEXITCODE -ne 0) { exit 0 }
+      # Run Checkov with JUnit XML output
+         checkov -d . --recursive `
+        -o junitxml `
+        --output-file-path "$(work_dir)/checkov-report.xml"
+
+      # Prevent pipeline failure
+      if ($LASTEXITCODE -ne 0) { exit 0 }
+    - task: PublishTestResults@2
+      displayName: "Publish Checkov Test Results"
+      inputs:
+        testResultsFormat: "JUnit"
+        testResultsFiles: "$(System.DefaultWorkingDirectory)/checkov-report.xml"
+        failTaskOnFailedTests: false
+
 
       # Trivy -------------
-      - task: PowerShell@2
+    - task: PowerShell@2
         continueOnError: true
         displayName: "Run Trivy"
         inputs:
          targetType: 'inline'
          script: |
-          cd "$(work_dir)/${{ parameters.environment }}"
+          cd "$(work_dir)/$(env)"
           trivy fs . --skip-db-update --skip-java-db-update --offline-scan --security-checks vuln
           if ($LASTEXITCODE -ne 0) { exit 0 }
 
