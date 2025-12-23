@@ -103,19 +103,19 @@ stages:
           workingDirectory: $(work_dir)/${{ parameters.environment }}
           environmentServiceNameAzureRM: 'todoapp_project'
 
-# # --------------------------------
-# # Stage 3: Infracost Cost Analysis
-# # --------------------------------
-# - stage: CostAnalysis
-#   displayName: "Infracost Cost Estimation"
-#   dependsOn: Plan
-#   jobs:
-#   - job: CostJob
-#     displayName: "Run Infracost"
-#     steps:
-#       - checkout: self      
-#       - download: current
-#         artifact: terraform-plan
+# --------------------------------
+# Stage 3: Infracost Cost Analysis
+# --------------------------------
+- stage: CostAnalysis
+  displayName: "Infracost Cost Estimation"
+  dependsOn: Plan
+  jobs:
+  - job: CostJob
+    displayName: "Run Infracost"
+    steps:
+    - task: CmdLine@2
+      inputs:
+        script: 'infracost breakdown --path .'
 
       
 #       - task: PowerShell@2
