@@ -116,7 +116,7 @@ stages:
     - task: CmdLine@2
       inputs:
         script: 'infracost breakdown --path .'
-        workingDirectory: '$(System.DefaultWorkingDirectory)'
+        workingDirectory: '$(work_dir)/${{ parameters.environment }}'
 
       
 #       - task: PowerShell@2
