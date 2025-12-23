@@ -40,8 +40,13 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            cd "$(work_dir)/$(env)"
-            tflint
+            cd "$(work_dir)/${{ parameters.environment }}"
+            tflint -o junitxml --output-file-path "$(work_dir)/tflint-report.xml"
+
+      - task: PublishTestResults@2
+        inputs:
+          testResultsFormat: 'JUnit'
+          testResultsFiles: 'tflintResult.xml'
 
       # tfsec -------------
       - task: PowerShell@2
@@ -49,7 +54,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            cd "$(work_dir)/$(env)"
+            cd "$(work_dir)/${{ parameters.environment }}"
             tfsec .
 
       # Checkov -----------
@@ -59,7 +64,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            cd "$(work_dir)/$(env)"            
+            cd "$(work_dir)${{ parameters.environment }}"            
             checkov -d . --recursive -o junitxml --output-file-path "$(work_dir)/checkov-report.xml"
              
             
@@ -79,7 +84,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            cd "$(work_dir)/$(env)"
+            cd "$(work_dir)${{ parameters.environment }}"
             trivy fs . --skip-db-update --skip-java-db-update --offline-scan --security-checks vuln
             if ($LASTEXITCODE -ne 0) { exit 0 }
 
