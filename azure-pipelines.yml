@@ -72,7 +72,7 @@ stages:
         displayName: "Publish Checkov Test Results"
         inputs:
           testResultsFormat: "JUnit"
-          testResultsFiles: "$(System.DefaultWorkingDirectory)/checkov-report.xml"
+          testResultsFiles: "$(work_dir)/checkov-report.xml"
           failTaskOnFailedTests: false
 
       # Trivy -------------
