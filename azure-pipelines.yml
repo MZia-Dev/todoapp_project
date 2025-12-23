@@ -31,16 +31,13 @@ stages:
   - job: StaticAnalysisJob
     displayName: "Run IaC lint & security scans"
     steps:
-      - checkout: self
-
-      # TFLint ------------
+      - checkout: self 
       - task: PowerShell@2
         displayName: "Run tflint"
         inputs:
           targetType: 'inline'
-          script: |
-           cd "$(work_dir)/${{ parameters.environment }}"
-           tflint
+          script: 'tflint'
+          workingDirectory: '$(work_dir)/${{ parameters.environment }}'
 
       # tfsec -------------
       - task: PowerShell@2
