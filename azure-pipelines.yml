@@ -33,67 +33,88 @@ stages:
     steps:
       - checkout: self
 
-      # TFLint ------------
+      # -------------------
+      # TFLint
+      # -------------------
       - task: PowerShell@2
         displayName: "Run tflint"
         continueOnError: true
         inputs:
           targetType: 'inline'
-          script: 'tflint --format junit --output tflint-out.xml'
+          script: |
+            tflint -f junit -o tflint-out.xml
           workingDirectory: '$(work_dir)/${{ parameters.environment }}'
+
       - task: PublishTestResults@2
+        displayName: "Publish TFLint Results"
         inputs:
           testResultsFormat: 'JUnit'
           testResultsFiles: 'tflint-out.xml'
           searchFolder: '$(work_dir)/${{ parameters.environment }}'
-          testRunTitle: 'TfLint'
+          testRunTitle: 'TFLint'
 
-      # tfsec -------------
+
+      # -------------------
+      # TFSEC
+      # -------------------
       - task: PowerShell@2
         displayName: "Run tfsec"
+        continueOnError: true
         inputs:
           targetType: 'inline'
-          script: 'tfsec -o junitxml > tfsec-out.xml'
+          script: |
+            tfsec --format junit --out tfsec-out.xml
           workingDirectory: '$(work_dir)/${{ parameters.environment }}'
+
       - task: PublishTestResults@2
+        displayName: "Publish TFSEC Results"
         inputs:
           testResultsFormat: 'JUnit'
           testResultsFiles: 'tfsec-out.xml'
           searchFolder: '$(work_dir)/${{ parameters.environment }}'
+          testRunTitle: 'TFSEC'
 
 
-      # Checkov -----------
+      # -------------------
+      # CHECKOV
+      # -------------------
       - task: PowerShell@2
-        continueOnError: true
         displayName: "Run Checkov"
+        continueOnError: true
         inputs:
           targetType: 'inline'
           script: |
             checkov -d . -o junitxml --output-file-path checkov-out.xml
-            
-            if ($LASTEXITCODE -ne 0) { exit 0 }
           workingDirectory: '$(work_dir)/${{ parameters.environment }}'
-      - task: PublishBuildArtifacts@1
-        inputs:
-          PathtoPublish: '$(work_dir)/${{ parameters.environment }}'
-          ArtifactName: 'checkov-out.xml'
-          publishLocation: 'Container'
+
       - task: PublishTestResults@2
+        displayName: "Publish Checkov Results"
         inputs:
           testResultsFormat: 'JUnit'
           testResultsFiles: 'checkov-out.xml'
           searchFolder: '$(work_dir)/${{ parameters.environment }}'
+          testRunTitle: 'Checkov'
 
-      # Trivy -------------
+
+      # -------------------
+      # TRIVY (Filesystem scan)
+      # -------------------
       - task: PowerShell@2
+        displayName: "Run Trivy FS Scan"
         continueOnError: true
-        displayName: "Run Trivy"
         inputs:
-         targetType: 'inline'
-         script: |
-          cd "$(work_dir)/${{ parameters.environment }}"
-          trivy fs . --skip-db-update --skip-java-db-update --offline-scan --security-checks vuln
-          if ($LASTEXITCODE -ne 0) { exit 0 }
+          targetType: 'inline'
+          script: |
+            trivy fs --format junit --output trivy-out.xml .
+          workingDirectory: '$(work_dir)/${{ parameters.environment }}'
+
+      - task: PublishTestResults@2
+        displayName: "Publish Trivy Results"
+        inputs:
+          testResultsFormat: 'JUnit'
+          testResultsFiles: 'trivy-out.xml'
+          searchFolder: '$(work_dir)/${{ parameters.environment }}'
+          testRunTitle: 'Trivy'
 
 
 # -------------------------------
