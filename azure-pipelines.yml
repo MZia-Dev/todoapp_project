@@ -39,7 +39,7 @@ stages:
         continueOnError: true
         inputs:
           targetType: 'inline'
-          script: 'tflint -o junitxml > tflint-out.xml'
+          script: 'tflint --format junit --output tflint-out.xml'
           workingDirectory: '$(work_dir)/${{ parameters.environment }}'
       - task: PublishTestResults@2
         inputs:
@@ -69,7 +69,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            checkov -d -o junitxml > checkov-out.xml
+            checkov -d . -o junitxml --output-file-path checkov-out.xml
             
             if ($LASTEXITCODE -ne 0) { exit 0 }
           workingDirectory: '$(work_dir)/${{ parameters.environment }}'
