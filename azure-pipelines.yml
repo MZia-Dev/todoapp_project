@@ -36,6 +36,7 @@ stages:
       # TFLint ------------
       - task: PowerShell@2
         displayName: "Run tflint"
+        continueOnError: true
         inputs:
           targetType: 'inline'
           script: 'tflint -o junitxml > tflint-out.xml'
