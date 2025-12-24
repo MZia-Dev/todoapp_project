@@ -42,7 +42,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            tflint -f junit -o tflint-out.xml
+            tflint --format junit --output tflint-out.xml
           workingDirectory: '$(work_dir)/${{ parameters.environment }}'
 
       - task: PublishTestResults@2
