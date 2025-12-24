@@ -38,18 +38,27 @@ stages:
         displayName: "Run tflint"
         inputs:
           targetType: 'inline'
-          script: |
-           cd "$(work_dir)/${{ parameters.environment }}"
-           tflint
+          script: 'tflint -o junitxml > tflint-out.xml'
+          workingDirectory: '$(work_dir)/${{ parameters.environment }}'
+      - task: PublishTestResults@2
+        inputs:
+          testResultsFormat: 'JUnit'
+          testResultsFiles: 'tflint-out.xml'
+          searchFolder: '$(work_dir)/${{ parameters.environment }}'
+          testRunTitle: 'TfLint'
 
       # tfsec -------------
       - task: PowerShell@2
         displayName: "Run tfsec"
         inputs:
           targetType: 'inline'
-          script: |
-           cd "$(work_dir)/${{ parameters.environment }}"
-           tfsec .
+          script: 'tfsec -o junitxml > tfsec-out.xml'
+          workingDirectory: '$(work_dir)/${{ parameters.environment }}'
+      - task: PublishTestResults@2
+        inputs:
+          testResultsFormat: 'JUnit'
+          testResultsFiles: 'tfsec-out.xml'
+          searchFolder: '$(work_dir)/${{ parameters.environment }}'
 
 
       # Checkov -----------
@@ -57,12 +66,22 @@ stages:
         continueOnError: true
         displayName: "Run Checkov"
         inputs:
-         targetType: 'inline'
-         script: |
-          cd "$(work_dir)/${{ parameters.environment }}"
-          checkov -d . --recursive
-
-          if ($LASTEXITCODE -ne 0) { exit 0 }
+          targetType: 'inline'
+          script: |
+            checkov -d -o junitxml > checkov-out.xml
+            
+            if ($LASTEXITCODE -ne 0) { exit 0 }
+          workingDirectory: '$(work_dir)/${{ parameters.environment }}'
+      - task: PublishBuildArtifacts@1
+        inputs:
+          PathtoPublish: '$(work_dir)/${{ parameters.environment }}'
+          ArtifactName: 'checkov-out.xml'
+          publishLocation: 'Container'
+      - task: PublishTestResults@2
+        inputs:
+          testResultsFormat: 'JUnit'
+          testResultsFiles: 'checkov-out.xml'
+          searchFolder: '$(work_dir)/${{ parameters.environment }}'
 
       # Trivy -------------
       - task: PowerShell@2
