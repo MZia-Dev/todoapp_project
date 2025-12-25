@@ -1,7 +1,8 @@
 name: todoapp_project
 trigger: none
 
-pool: todoapp_project
+pool: 
+ name: todoapp_project
 
 
 variables:
@@ -84,7 +85,9 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            checkov -d . -o junitxml --output-file-path checkov-out.xml
+            checkov -d . -o junitxml --output-file-path .
+            
+            
             if ($LASTEXITCODE -ne 0) { exit 0 }
           workingDirectory: '$(work_dir)/${{ parameters.environment }}'
 
