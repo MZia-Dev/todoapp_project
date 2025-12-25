@@ -85,7 +85,7 @@ stages:
         inputs:
           targetType: 'inline'
           script: |
-            checkov -d . -o junitxml --output-file-path .
+            checkov -d . -o junitxml --output-file-path . checkov-out.xml
             
             
             if ($LASTEXITCODE -ne 0) { exit 0 }
