@@ -89,14 +89,14 @@ stages:
             
             
             if ($LASTEXITCODE -ne 0) { exit 0 }
-          workingDirectory: '$(work_dir)/${{ parameters.environment }}'
+          workingDirectory: '$(System.DefaultWorkingDirectory)/environment/prod'
 
       - task: PublishTestResults@2
         displayName: "Publish Checkov Results"
         inputs:
           testResultsFormat: 'JUnit'
           testResultsFiles: 'checkov-out.xml'
-          searchFolder: '$(work_dir)/${{ parameters.environment }}'
+          searchFolder: '$(System.DefaultWorkingDirectory)/environment/prod'
           testRunTitle: 'Checkov'
 
 
